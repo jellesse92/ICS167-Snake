@@ -1,0 +1,306 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Snake!</title>
+	<style>
+		input, textarea {border:1px solid #CCC;margin:0px;padding:0px}
+		h1 {font-family: Calibri, Candara, Segoe, 'Segoe UI', Optima, Arial, sans-serif;}
+
+		#body {max-width:800px;margin:auto}
+		#log {width:600px;height:100px}
+		#message {width:100%;line-height:20px}
+		#user_input{ line-height: 30px;font-family: Calibri, Candara, Segoe, 'Segoe UI', Optima, Arial, sans-serif; align: justify; width: 800px}
+		#user_input input{line-height: 20px; }
+	</style>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+	<script src="fancywebsocket.js"></script>
+	<script>
+		var Server;
+			
+		function log( text ) {
+			$log = $('#log');
+			//Add text to log
+			$log.append(($log.val()?"\n":'')+text);
+			//Autoscroll
+			$log[0].scrollTop = $log[0].scrollHeight - $log[0].clientHeight;
+		}
+		function send_key( key ) {
+			Server.send('key', key);
+		}
+		function send( text ) {
+			Server.send( 'message', text );
+		}
+
+        function connect(){
+            log('Connecting...');
+			Server = new FancyWebSocket('ws://' + document.getElementById('ip').value + ':' + document.getElementById('port').value);
+			
+			$('#message').keypress(function(e) {
+				if ( e.keyCode == 13 && this.value ) {
+					log( 'You: ' + this.value );
+					send( this.value );
+
+					$(this).val('');
+				}
+			});
+
+			//Let the user know we're connected
+			Server.bind('open', function() {
+                document.getElementById("cntBtn").disabled = true;
+                document.getElementById("gameArea").style.visibility.visible();
+				log( "Connected." );
+			});
+
+			//OH NOES! Disconnection occurred.
+			Server.bind('close', function( data ) {
+                document.getElementById("cntBtn").disabled = false;
+				log( "Disconnected." );
+			});
+
+			//Log any messages sent from server
+			Server.bind('message', function( payload ) {
+				log( payload );
+			});
+
+			Server.connect();
+        }
+
+	</script>
+</head>
+<!-- Lets make a simple snake game -->
+
+<h1> Snake!</h1>
+	<div id='user_input'>
+	        Server ip: <input type='text' id='ip' name='ip'>
+	        Server port: <input type='text' id='port' name='port'><br/>
+	        Player1 Name: <input type='text' id = 'player1name' name ='player1name'>
+	        Player2 Name: <input type='text' id = 'player2name' name ='player2name'>
+        <button type="button" id='cntBtn' onclick="connect();">Connect</button>
+    </div>
+<div id="gameArea" style="visibility: hidden;"><canvas id="canvas" width="450" height="450"></canvas></div>
+<br/><textarea id='log' name='log' readonly='readonly'></textarea>
+<!-- Jquery -->
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+
+$(document).ready(function(){
+
+	function Snake(player, color){ // implement username here later.
+		this.player = player;
+		this.score = 0;
+		this.color = color;
+		this.body = [];
+		this.length = 5;
+		this.scorePlus = function(){
+			Server.send('score', this.player)
+		}
+		this.getScore = function(){
+			return this.score;
+		}
+		this.build = function (player)
+		{
+			for(var i = this.length-1; i>=0; i--)
+			{
+				//This will create a horizontal snake starting from the top left
+				var vary = (this.player == 1) ? 0 : 40;
+				this.body.push({x: i, y: vary});
+
+			}
+
+			//document.getElementById("snake2").innerHTML= vary;
+		}
+		this.direction = "right";
+		this.getColor = function(){
+			return this.color;
+		}
+		this.paint = function(){
+
+			for(var i = 0; i < this.body.length; i++)
+			{
+				var c = this.body[i];
+				//Lets paint 10px wide cells
+				paint_cell(c.x, c.y, this.color);
+			}
+
+		}
+		this.move = function(){
+
+			
+			var nx = this.body[0].x;
+			var ny = this.body[0].y;
+
+			//These were the position of the head cell.
+			//We will increment it to get the new head position
+			//Lets add proper direction based movement now
+			if(this.direction == "right") nx++;
+			else if(this.direction == "left") nx--;
+			else if(this.direction == "up") ny--;
+			else if(this.direction == "down") ny++;
+
+
+			if(nx == -1 || nx == w/cw || ny == -1 || ny == h/cw || check_collision(nx, ny, this.body))
+			{
+				//restart game
+				//init(); game over script goes here.
+				//Lets organize the code a bit now.
+				return;
+			}
+
+			//Lets write the code to make the snake eat the food
+			//The logic is simple
+			//If the new head position matches with that of the food,
+			//Create a new head instead of moving the tail
+			if(nx == food.x && ny == food.y)
+			{
+				var tail = {x: nx, y: ny};
+				this.score++;
+				//Create new food
+				create_food();
+			}
+			else
+			{
+				var tail = this.body.pop(); //pops out the last cell
+				tail.x = nx; tail.y = ny;
+			}
+
+			//The snake can now eat the food.
+			
+			this.body.unshift(tail); //puts back the tail as the first cell
+			this.paint();
+
+
+
+			
+		}
+		this.change_dir = function(key){
+			if(this.player==1){
+			if(key == "37" && this.direction != "right") this.direction = "left";
+			else if(key == "38" && this.direction != "down") this.direction = "up";
+			else if(key == "39" && this.direction != "left") this.direction = "right";
+			else if(key == "40" && this.direction != "up") this.direction = "down";
+			}
+			if(this.player==2){
+			if(key == "65" && this.direction != "right") this.direction = "left";
+			else if(key == "87" && this.direction != "down") this.direction = "up";
+			else if(key == "68" && this.direction != "left") this.direction = "right";
+			else if(key == "83" && this.direction != "up") this.direction = "down";
+			}
+		}
+		this.printScore = function(){
+			ctx.fillStyle = this.color;
+			var score_text = "Player" + this.player + " Score: " + this.score;
+			ctx.fillText(score_text, ((this.player==1) ? 2 :100 ), h-5);
+			ctx.fillStyle = "black";
+			
+		}
+	}
+	//Canvas stuff
+	var canvas = $("#canvas")[0];
+	var ctx = canvas.getContext("2d");
+	var w = $("#canvas").width();
+	var h = $("#canvas").height();
+	
+	//Lets save the cell width in a variable for easy control
+	var cw = 10;
+	var d;
+	var food;
+	var score;
+	
+	//Lets create the snake now
+	var snake;
+	var snake_array; //an array of cells to make up the snake
+	var snake2;
+	function init()
+	{
+		snake = new Snake(1, "black");
+		snake2 = new Snake(2, "red");
+		alert(snake2.score);
+		d = "right"; //default direction
+		snake.build("player1");
+		snake2.build("player2");
+		create_food(); //Now we can see the food particle
+		//finally lets display the score
+		score = 0;
+		
+		//Lets move the snake now using a timer which will trigger the paint function
+		//every 60ms
+		if(typeof game_loop != "undefined") clearInterval(game_loop);
+		game_loop = setInterval(paint, 60);
+	}
+	init();
+
+	
+	
+	//Lets create the food now
+	function create_food()
+	{
+		food = {
+			x: Math.round(Math.random()*(w-cw)/cw), 
+			y: Math.round(Math.random()*(h-cw)/cw), 
+		};
+		//This will create a cell with x/y between 0-44
+		//Because there are 45(450/10) positions accross the rows and columns
+	}
+	
+	//Lets paint the snake now
+	function paint()
+	{
+		//To avoid the snake trail we need to paint the BG on every frame
+		//Lets paint the canvas now
+		
+		ctx.fillStyle = "white";
+		ctx.fillRect(0, 0, w, h);
+		ctx.strokeStyle = "black";
+		ctx.strokeRect(0, 0, w, h);
+		
+				
+		//Lets paint the food
+		paint_cell(food.x, food.y, "green");
+		//Lets paint the score
+		
+		snake.move();
+		snake.paint();
+		snake.printScore();
+		snake2.move();
+		snake2.paint();
+		snake2.printScore();
+		//	document.getElementById("snake2").innerHTML= snake2.body[0].x;
+	}
+	
+	//Lets first create a generic function to paint cells
+	function paint_cell(x, y, color)
+	{
+		ctx.fillStyle = color;
+		ctx.fillRect(x*cw, y*cw, cw, cw);
+		ctx.strokeStyle = "white";
+		ctx.strokeRect(x*cw, y*cw, cw, cw);
+	}
+	
+	function check_collision(x, y, array)
+	{
+		//This function will check if the provided x/y coordinates exist
+		//in an array of cells or not
+		for(var i = 0; i < array.length; i++)
+		{
+			if(array[i].x == x && array[i].y == y)
+			 return true;
+		}
+		return false;
+	}
+	
+	//Lets add the keyboard controls now
+	$(document).keydown(function(e){
+		var key = e.which;
+		//We will add another clause to prevent reverse gear
+		snake.change_dir(key);
+		snake2.change_dir(key);
+		//The snake is now keyboard controllable
+	})
+		
+})
+</script>
+<body>
+</body>
+</html>
