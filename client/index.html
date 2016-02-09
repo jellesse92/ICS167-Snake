@@ -50,6 +50,8 @@
                 document.getElementById("cntBtn").disabled = true;
                 document.getElementById("gameArea").style.visibility.visible();
 				log( "Connected." );
+				Server.send("player1", document.getElementByID("player1name").value);
+				Server.send("player2", document.getElementById("player2name").value);
 			});
 
 			//OH NOES! Disconnection occurred.
