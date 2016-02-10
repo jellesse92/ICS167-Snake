@@ -6,7 +6,6 @@
 	<style>
 		input, textarea {border:1px solid #CCC;margin:0px;padding:0px}
 		h1 {font-family: Calibri, Candara, Segoe, 'Segoe UI', Optima, Arial, sans-serif;}
-
 		#body {max-width:800px;margin:auto}
 		#log {width:600px;height:100px}
 		#message {width:100%;line-height:20px}
@@ -34,6 +33,7 @@
 
         function connect(){
             log('Connecting...');
+
 			Server = new FancyWebSocket('ws://' + document.getElementById('ip').value + ':' + document.getElementById('port').value);
 			
 			$('#message').keypress(function(e) {
@@ -46,10 +46,10 @@
 			});
 
 			//Let the user know we're connected
-			Server.bind('open', function() {
-                document.getElementById("cntBtn").disabled = true;
-                document.getElementById("gameArea").style.visibility.visible();
-				log( "Connected." );
+			Server.bind('open', function () {
+			    log('Connected.');
+			    document.getElementById("cntBtn").disabled = true;
+                document.getElementById("gameArea").style.visibility = 'visible';
 				Server.send("player1", document.getElementByID("player1name").value);
 				Server.send("player2", document.getElementById("player2name").value);
 			});
