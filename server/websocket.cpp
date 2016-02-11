@@ -309,8 +309,10 @@ bool webSocket::wsCheckSizeClientFrame(int clientID){
 }
 
 void webSocket::wsRemoveClient(int clientID){
-    if (callOnClose != NULL)
-        callOnClose(clientID);
+	if (callOnClose != NULL) {
+		callOnClose(clientID);
+		clients--;
+	}
 
     wsClient *client = wsClients[clientID];
 
@@ -716,8 +718,9 @@ void webSocket::startServer(int port){
                     if (i == listenfd){
                         socklen_t addrlen = sizeof(cli_addr);
                         int newfd = accept(listenfd, (struct sockaddr*)&cli_addr, &addrlen);
-                        if (newfd != -1){
+                        if (newfd != -1 && clients < CLIENTS_ALLOWED){
                             /* add new client */
+							clients++;
                             wsAddClient(newfd, cli_addr.sin_addr);
                             printf("New connection from %s on socket %d\n", inet_ntoa(cli_addr.sin_addr), newfd);
                         }
@@ -752,8 +755,9 @@ void webSocket::startServer(int port){
 void webSocket::stopServer(){
     for (int i = 0; i < wsClients.size(); i++){
         if (wsClients[i] != NULL){
-            if (wsClients[i]->ReadyState != WS_READY_STATE_CONNECTING)
-                wsSendClientClose(i, WS_STATUS_GONE_AWAY);
+			if (wsClients[i]->ReadyState != WS_READY_STATE_CONNECTING) {
+				wsSendClientClose(i, WS_STATUS_GONE_AWAY);
+			}
 #ifdef __linux__
                 close(wsClients[i]->socket);
 #elif _WIN32

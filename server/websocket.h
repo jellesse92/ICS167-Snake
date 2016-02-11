@@ -48,6 +48,8 @@ typedef void (*messageCallback)(int, string);
 #define WS_TIMEOUT_RECV 10
 #define WS_TIMEOUT_PONG 5
 
+const int CLIENTS_ALLOWED = 1;
+
 class wsClient{
 public:
     wsClient(int _socket, in_addr _addr){
@@ -122,6 +124,8 @@ private:
     defaultCallback callOnClose;
     messageCallback callOnMessage;
     nullCallback callPeriodic;
+
+	int clients = 0;
 };
 
 #endif

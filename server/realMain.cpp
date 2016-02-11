@@ -18,7 +18,9 @@ string player2 = "";
 void openHandler(int clientID){
 	score1 = 0;
 	score2 = 0;
-    server.wsSend(clientID, "Welcome!");
+
+	server.wsSend(clientID, "Welcome!");
+
 }
 
 /* called when a client disconnects */
