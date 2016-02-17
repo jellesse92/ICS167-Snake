@@ -21,7 +21,8 @@ public:
 	void UpdateBoardState();						//Updates board state. CALL AFTER GETTING PLAYER INPUTS
 	std::string GetBoardState();					//Gets the state of the board
 	int GetPlayerScore(int player);					//Gets player score
-
+	int GetBoardHeight();							//Gets board height
+	int GetBoardWidth();							//Gets board width
 
 	void DisplayState();			//TEMPORARY outputs board state
 

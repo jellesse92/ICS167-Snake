@@ -84,6 +84,16 @@ int SnakeGame::GetPlayerScore(int player)
 	return playerScore[player];
 }
 
+int SnakeGame::GetBoardHeight()
+{
+	return BOARD_HEIGHT;
+}
+
+int SnakeGame::GetBoardWidth()
+{
+	return BOARD_WIDTH;
+}
+
 void SnakeGame::DisplayState()
 {
 	for (int i = 0; i < board.length(); i++) {
