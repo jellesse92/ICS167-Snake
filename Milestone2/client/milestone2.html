@@ -1,0 +1,121 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Snake!</title>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<script src="fancywebsocket.js"></script>
+	<style>
+		@font-face {
+		    font-family: gameBoardfont;
+		    src: url(SQUARE80.ttf);
+		}
+		input, textarea {border:1px solid #CCC;margin:0px;padding:0px}
+		h2 {font-family: Calibri, Candara, Segoe, 'Segoe UI', Optima, Arial, sans-serif;}
+		#body {max-width:800px;margin:auto}
+		#log {width:600px;height:60px}
+		#message {width:100%;line-height:20px}
+		#user_input{ line-height: 30px;font-family: Calibri, Candara, Segoe, 'Segoe UI', Optima, Arial, sans-serif; align: justify; width: 800px}
+		#user_input input{line-height: 20px; }
+		#b2String{font-family:gameBoardfont;}
+	</style>
+	<script type="text/javascript">
+		var Server;
+		var connected = false;
+		function log( text ) {
+			$log = $('#log');
+			//Add text to log
+			$log.append(($log.val()?"\n":'')+text);
+			//Autoscroll
+			$log[0].scrollTop = $log[0].scrollHeight - $log[0].clientHeight;
+		}
+		function send_key( key ) {
+			Server.send('key', key);
+		}
+		function send( text ) {
+			Server.send( 'message', text );
+		}
+	
+	    function connect(){
+	        log('Connecting...');
+	
+			Server = new FancyWebSocket('ws://' + document.getElementById('ip').value + ':' + document.getElementById('port').value);
+			
+			$('#message').keypress(function(e) {
+				if ( e.keyCode == 13 && this.value ) {
+					log( 'You: ' + this.value );
+					send( this.value );
+	
+					$(this).val('');
+				}
+			});
+	
+			//Let the user know we're connected
+			Server.bind('open', function () {
+			    log('Connected.');
+			    document.getElementById("cntBtn").disabled = true;
+	            document.getElementById("gameArea").style.visibility = 'visible';
+	            document.getElementById("user_input").style.visibility = 'hidden';
+				Server.send("message", "NewPlayer:" + document.getElementById("playerName").value);
+				connected = true;
+			});
+	
+			//OH NOES! Disconnection occurred.
+			Server.bind('close', function( data ) {
+	            document.getElementById("cntBtn").disabled = false;
+				log( "Disconnected." );
+			});
+	
+			//Log any messages sent from server
+			Server.bind('message', function( payload ) {
+				if(payload.slice(0,1) == "1") {$("#p1score").innerHTML(payload(2));}
+				else if (payload.slice(0,1) == "2") {$("#p2score").innerHTML(payload(2));}
+				//else if(payload.slice(0,2) == "GW"){log(payload);}
+				//else if(payload.slice(0,2) == "GH"){log(payload);}
+				else if(payload.slice(0,2) == "GB"){$("#b2string").innerHTML(payload(3).replace("*"," ").replace("1", "<font color='red'>o</font>").replace("2","<font color='blue'>o</font>"));}
+				else {log(payload);}
+			});
+	
+			Server.connect();
+	    }
+
+	    $(document).ready(function(){
+	    	$(document).keydown(function(e){
+	    		var key = e.which;
+	    		//We will add another clause to prevent reverse gear
+	    		var direction = "";
+	    		if(key == "37" && direction != "right") direction = "left";
+				else if(key == "38" && direction != "down") direction = "up";
+				else if(key == "39" && direction != "left") direction = "right";
+				else if(key == "40" && direction != "up") direction = "down";
+				if(direction != ""){Server.send("COMMAND:" + direction);}
+	    		})
+	    		
+	    		//The snake is now keyboard controllable
+	    })
+   </script>
+
+</head>
+<body>
+	
+	<div id='user_input'>
+		        Server ip: <input type='text' id='ip' name='ip'>
+		        Server port: <input type='text' id='port' name='port'><br/>
+		        Player Name: <input type='text' id = 'playerName' name ='playerName'>
+	        <button type="button" id='cntBtn' onclick="connect();">Connect</button>
+	    </div>
+	<table id="gameBoard">
+	<thead>
+	<tr><div id="p1score"></div></tr>
+	<tr><div id="p2Score"></div></tr>
+	</thead>
+	<tbody>
+	<td colspan="2"><div id="b2String">ooo    i i<br> ooo iii<br> o o ii</div></td>
+	</tbody>
+	</table>
+	<div id="gameArea" style="visibility: hidden;"><canvas id="canvas" width="450" height="450"></canvas></div>
+	<br/><textarea id='log' name='log' readonly='readonly'></textarea>
+
+</body>
+</html>
