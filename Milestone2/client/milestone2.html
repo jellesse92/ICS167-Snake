@@ -27,6 +27,8 @@
 	var ctx;
 	var GW = 0;
 	var GH = 0;
+	var w;
+	var h;
 	var cw = 10; // cell width;
 	var gameBoard;
 	var food = {x: 1, y:1};
@@ -83,10 +85,16 @@
 
 		//Log any messages sent from server
 		Server.bind('message', function( payload ) {
-			if(payload.slice(0,1) == "1") {document.getElementById("#p1score").innerHTML = payload(2);}
-			else if (payload.slice(0,1) == "2") {document.getElementById("#p2score").innerHTML(payload(2));}
-			else if(payload.slice(0,2) == "GW"){GW = parseInt(payload.slice(3));}
-			else if(payload.slice(0,2) == "GH"){GH = parseInt(payload.slice(3));}
+			if(payload.slice(0,1) == "1") {document.getElementById("#p1score").innerHTML = payload.slice(2);}
+			else if (payload.slice(0,1) == "2") {document.getElementById("#p2score").innerHTML = payload.slice(2);}
+			else if(payload.slice(0,2) == "GW"){
+				GW = parseInt(payload.slice(3));
+				w = GW * 10;
+			}
+			else if(payload.slice(0,2) == "GH"){
+				GH = parseInt(payload.slice(3));
+				h = GH * 10; 
+				}
 			else if(payload.slice(0,2) == "GB"){
 				getBoard(payload.slice(3));
 				}
@@ -155,9 +163,9 @@
 		//Lets paint the canvas now
 		
 		ctx.fillStyle = "white";
-		ctx.fillRect(0, 0, GW, GH);
+		ctx.fillRect(0, 0, w, h);
 		ctx.strokeStyle = "black";
-		ctx.strokeRect(0, 0, GW, GH);
+		ctx.strokeRect(0, 0, w, h);
 		
 				
 		//Lets paint the food
@@ -168,13 +176,13 @@
 		{
 			var c = snake[0][i];
 			//Lets paint 10px wide cells
-			paint_cell(c.x, c.y, this.color);
+			paint_cell(c.x, c.y, "red");
 		}
 		for(var i = 0; i < snake[1].length; i++)
 		{
 			var c = snake[1][i];
 			//Lets paint 10px wide cells
-			paint_cell(c.x, c.y, this.color);
+			paint_cell(c.x, c.y, "blue");
 		}
 		
 		
