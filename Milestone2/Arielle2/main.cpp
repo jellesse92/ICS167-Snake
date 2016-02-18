@@ -4,7 +4,7 @@
 #include <sstream>
 #include <time.h>
 #include "websocket.h"
-#include "C:\Users\Arielle\Documents\Visual Studio 2015\Projects\ChatroomDemo\ChatroomDemo\Snake.h"
+#include "Snake.h"
 
 using namespace std;
 
@@ -65,18 +65,18 @@ void messageHandler(int clientID, string message) {
 	ostringstream os;
 	ostringstream os2;
 
-	if (message.find("Player1:") == 0) {
-		if (message.length()>8)
-			player1 = message.substr(8);
-		named = true;
-	}
-	if (message.find("Player2:") == 0) {
-		if (message.length()>8)
-			player2 = message.substr(8);
+	if (message.find("PlayerName:") == 0) {
+		if (message.length() > 11){
+			if (player1 == "")
+				player1 = message.substr(11);
+			else
+				player2 = message.substr(11);
+		}
 		named = true;
 	}
 
 	if (!named) {
+		std::cout << message;
 		std::cout << "AFTER NAMED";
 		if (message.find("COMMAND:") == 0)
 			std::cout << "RECIEVED:" << message << std::endl;

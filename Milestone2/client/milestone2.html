@@ -85,8 +85,8 @@
 
 		//Log any messages sent from server
 		Server.bind('message', function( payload ) {
-			if(payload.slice(0,1) == "1") {document.getElementById("#p1score").innerHTML = payload.slice(2);}
-			else if (payload.slice(0,1) == "2") {document.getElementById("#p2score").innerHTML = payload.slice(2);}
+			if(payload.slice(0,1) == "1") {document.getElementById("p1score").innerHTML = payload.slice(2);}
+			else if (payload.slice(0,1) == "2") {document.getElementById("p2score").innerHTML = payload.slice(2);}
 			else if(payload.slice(0,2) == "GW"){
 				GW = parseInt(payload.slice(3));
 				w = GW * 10;
@@ -222,6 +222,8 @@
 		        Server port: <input type='text' id='port' name='port'><br/>
 		        Player Name: <input type='text' id = 'playerName' name ='playerName'>
 	        <button type="button" id='cntBtn' onclick="connect();">Connect</button>
+	        <div id="p1score"></div>
+	        <div id="p2score"></div>
 	    </div>
 <!--	<table id="gameBoard">-->
 <!--	<thead>-->

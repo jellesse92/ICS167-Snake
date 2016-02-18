@@ -48,7 +48,7 @@ typedef void (*messageCallback)(int, string);
 #define WS_TIMEOUT_RECV 10
 #define WS_TIMEOUT_PONG 5
 
-const int CLIENTS_ALLOWED = 2;
+const int CLIENTS_ALLOWED = 900;
 
 class wsClient{
 public:
