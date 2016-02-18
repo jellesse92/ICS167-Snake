@@ -9,7 +9,8 @@
 using namespace std;
 
 webSocket server;
-
+int player1 = 0;
+int player2 = 1;
 string player1 = "";
 string player2 = "";
 
@@ -19,6 +20,7 @@ SnakeGame snakeState;
 void openHandler(int clientID) {
 
 	server.wsSend(clientID, "Welcome!");
+	
 
 	ostringstream game_width;
 	ostringstream game_height;
@@ -33,6 +35,9 @@ void openHandler(int clientID) {
 	server.wsSend(clientID, game_board.str());
 
 	vector<int> clientIDs = server.getClientIDs();
+
+	if (clientIDs.size() == 1) { player1 = clientID; }
+	else if (clientIDs.size() == 2) { player2 =  }
 
 	if (clientIDs.size() == 2) {
 		Sleep(50);
@@ -61,7 +66,8 @@ void closeHandler(int clientID) {
 /* called when a client sends a message to the server */
 void messageHandler(int clientID, string message) {
 	bool named = false;
-
+	vector<int> clientIDs = server.getClientIDs();
+	
 	ostringstream os;
 	ostringstream os2;
 
@@ -82,6 +88,12 @@ void messageHandler(int clientID, string message) {
 			std::cout << "RECIEVED:" << message << std::endl;
 			if (message.length() > 7)
 				snakeState.SetPlayerInput(clientID, message[8]);
+				/*
+				if (clientID == clientIDs[0])
+					snakeState.SetPlayerInput(0, message[8]);
+				if (clientID == clientIDs[1])
+					snakeState.SetPlayerInput(0, message[8]);
+					*/
 	}
 
 }
@@ -101,8 +113,8 @@ void periodicHandler() {
 				ostringstream score1;
 				ostringstream score2;
 				ss << "GB:" << snakeState.GetBoardState();
-				score1 << "1:" << snakeState.GetPlayerScore(0);
-				score2 << "2:" << snakeState.GetPlayerScore(1);
+				score1 << "1:" << player1 + "score: " << snakeState.GetPlayerScore(0);
+				score2 << "2:" << player2 + "score: " << snakeState.GetPlayerScore(1);
 
 				system("CLS");
 				snakeState.DisplayState();
