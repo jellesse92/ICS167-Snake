@@ -208,8 +208,8 @@
 		else if(key == "87" && direction != "S") direction = "W";
 		else if(key == "68" && direction != "A") direction = "D";
 		else if(key == "83" && direction != "W") direction = "S";
-		toSend = "COMMAND:" + direction;
-		if(direction != ""){Server.send(toSend);}
+		toSend = "COMMAND:".concat(direction);
+		if(direction != ""){Server.send(String(toSend));}
    	})
 
 </script>
