@@ -128,12 +128,12 @@
 			  if (letter == "1" || letter == "2") {
 				  num =parseInt(letter) 
 			    snake[num-1].push({
-			      x: j,
-			      y: loc
+			      x: loc,
+			      y: j
 			    });
 			  }
 			  else if (letter =="F"){
-				  food = {x: j, y: loc};
+				  food = {x: loc, y: j};
 			}	
 		}
 	}
@@ -204,7 +204,12 @@
 		else if(key == "38" && direction != "S") direction = "W";
 		else if(key == "39" && direction != "A") direction = "D";
 		else if(key == "40" && direction != "W") direction = "S";
-		if(direction != ""){Server.send("COMMAND:" + direction);}
+		else if(key == "65" && direction != "D") direction = "A";
+		else if(key == "87" && direction != "S") direction = "W";
+		else if(key == "68" && direction != "A") direction = "D";
+		else if(key == "83" && direction != "W") direction = "S";
+		toSend = "COMMAND:" + direction;
+		if(direction != ""){Server.send(toSend);}
    	})
 
 </script>
@@ -227,7 +232,7 @@
 <!--	<td colspan="2"><div id="b2String">ooo    i i<br> ooo iii<br> o o ii</div></td>-->
 <!--	</tbody>-->
 <!--	</table>-->
-	<div id="gameArea" style="visibility: hidden;"><canvas id="canvas" width="450" height="450"></canvas></div>
+	<div id="gameArea" style="visibility: hidden;"><canvas id="canvas" width="500" height="500"></canvas></div>
 <br/><textarea id='log' name='log' readonly='readonly'></textarea>
 
 </body>
