@@ -209,7 +209,7 @@
 		else if(key == "68" && direction != "A") direction = "D";
 		else if(key == "83" && direction != "W") direction = "S";
 		toSend = "COMMAND:".concat(direction);
-		if(direction != ""){Server.send(String(toSend));}
+		if(direction != ""){Server.send("message", toSend);}
    	})
 
 </script>
