@@ -10,16 +10,18 @@ using namespace std;
 
 webSocket server;
 
-int score1 = 0;
-int score2 = 0;
+
 string player1 = "";
 string player2 = "";
 
 /* called when a client connects */
 void openHandler(int clientID){
-	score1 = 0;
-	score2 = 0;
+
     server.wsSend(clientID, "Welcome!");
+
+	ostringstream ss;
+	ss << "The ID: "<< clientID;
+	server.wsSend(clientID, ss.str());
 }
 
 /* called when a client disconnects */
@@ -36,7 +38,6 @@ void closeHandler(int clientID){
 
 /* called when a client sends a message to the server */
 void messageHandler(int clientID, string message){
-	bool scored = false;
 	bool named = false;
 
     ostringstream os;
@@ -105,7 +106,7 @@ int main(int argc, char *argv[]){
 	SnakeGame snakeState;
 
 	//EXAMPLE
-	//SET TH
+	/*
 	while (true) {
 		system("cls");
 		snakeState.GetPlayerInput(0, 'w');		//THIS IS WHERE THE MESSAGES NEED TO BE SENT
@@ -113,6 +114,7 @@ int main(int argc, char *argv[]){
 		snakeState.DisplayState();		//JUST TO SEE IT WORKS
 		Sleep(100);
 	}
+	*/
 
 
     cout << "Please set server port: ";
