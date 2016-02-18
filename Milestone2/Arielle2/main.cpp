@@ -98,13 +98,20 @@ void periodicHandler() {
 				snakeState.UpdateBoardState();
 
 				ostringstream ss;
+				ostringstream score1;
+				ostringstream score2;
 				ss << "GB:" << snakeState.GetBoardState();
+				score1 << "1:" << snakeState.GetPlayerScore(0);
+				score2 << "2:" << snakeState.GetPlayerScore(1);
 
 				system("CLS");
 				snakeState.DisplayState();
 
-				for (int i = 0; i < clientIDs.size(); i++)
+				for (int i = 0; i < clientIDs.size(); i++){
 					server.wsSend(clientIDs[i], ss.str());
+					server.wsSend(clientIDs[i], score1.str());
+					server.wsSend(clientIDs[i], score2.str());
+				}
 
 				next = time(NULL) + 10;
 			}

@@ -165,8 +165,21 @@ bool SnakeGame::UpdateBoard()
 				playerScore[0]++;
 				gameOver = true;
 			}
-			board[snakeBody[0][i]] = '+';
+			board[snakeBody[0][i]] = '1';
 		}
+
+		for (int i = 1; i < snakeBody[1].size(); i++) {
+			if (board[snakeBody[1][i]] == '2') {
+				playerScore[0]++;
+				gameOver = true;
+			}
+			if (board[snakeBody[1][i]] == '1') {
+				playerScore[1]++;
+				gameOver = true;
+			}
+			board[snakeBody[0][i]] = '2';
+		}
+
 	}
 	return !gameOver;
 }
