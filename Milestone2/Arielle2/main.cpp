@@ -9,8 +9,6 @@
 using namespace std;
 
 webSocket server;
-int player1 = 0;
-int player2 = 1;
 string player1 = "";
 string player2 = "";
 
@@ -35,9 +33,6 @@ void openHandler(int clientID) {
 	server.wsSend(clientID, game_board.str());
 
 	vector<int> clientIDs = server.getClientIDs();
-
-	if (clientIDs.size() == 1) { player1 = clientID; }
-	else if (clientIDs.size() == 2) { player2 =  }
 
 	if (clientIDs.size() == 2) {
 		Sleep(50);
@@ -71,12 +66,12 @@ void messageHandler(int clientID, string message) {
 	ostringstream os;
 	ostringstream os2;
 
-	if (message.find("PlayerName:") == 0) {
-		if (message.length() > 11){
+	if (message.find("NewPlayer:") == 0) {
+		if (message.length() > 10){
 			if (player1 == "")
-				player1 = message.substr(11);
+				player1 = message.substr(10);
 			else
-				player2 = message.substr(11);
+				player2 = message.substr(10);
 		}
 		named = true;
 	}
@@ -84,10 +79,15 @@ void messageHandler(int clientID, string message) {
 	if (!named) {
 		std::cout << message;
 		std::cout << "AFTER NAMED";
+		vector<int> clientIDs = server.getClientIDs();
 		if (message.find("COMMAND:") == 0)
 			std::cout << "RECIEVED:" << message << std::endl;
-			if (message.length() > 7)
-				snakeState.SetPlayerInput(clientID, message[8]);
+		if (message.length() > 7){
+			if (clientID == clientIDs[0]){
+				snakeState.SetPlayerInput(0, message[8]);
+			}
+			else { snakeState.SetPlayerInput(1, message[8]); }
+		}
 				/*
 				if (clientID == clientIDs[0])
 					snakeState.SetPlayerInput(0, message[8]);
@@ -113,8 +113,8 @@ void periodicHandler() {
 				ostringstream score1;
 				ostringstream score2;
 				ss << "GB:" << snakeState.GetBoardState();
-				score1 << "1:" << player1 + "score: " << snakeState.GetPlayerScore(0);
-				score2 << "2:" << player2 + "score: " << snakeState.GetPlayerScore(1);
+				score1 << "1:" << player1 + " score: " << snakeState.GetPlayerScore(0);
+				score2 << "2:" << player2 + " score: " << snakeState.GetPlayerScore(1);
 
 				system("CLS");
 				snakeState.DisplayState();
