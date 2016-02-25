@@ -1,3 +1,10 @@
+/*
+Arielle Chongco 45137728
+Jasmine Hunter  51994784
+Akihiro Izumi   69616804
+Jaysen Gan	25399148
+*/
+
 #ifndef BASE64_H
 #define BASE64_H
 

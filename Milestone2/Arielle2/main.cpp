@@ -1,3 +1,11 @@
+/*
+	Arielle Chongco 45137728
+	Jasmine Hunter  51994784
+	Akihiro Izumi   69616804
+	Jaysen Gan	25399148
+*/
+
+
 #include <stdlib.h>
 #include <iostream>
 #include <string>
@@ -13,13 +21,14 @@ string player1 = "";
 string player2 = "";
 
 SnakeGame snakeState;
+bool gameStarted;
 
 /* called when a client connects */
 void openHandler(int clientID) {
+	vector<int> clientIDs = server.getClientIDs();
 
 	server.wsSend(clientID, "Welcome!");
 	
-
 	ostringstream game_width;
 	ostringstream game_height;
 	ostringstream game_board;
@@ -31,18 +40,27 @@ void openHandler(int clientID) {
 	server.wsSend(clientID, game_width.str());
 	server.wsSend(clientID, game_height.str());
 	server.wsSend(clientID, game_board.str());
-
-	vector<int> clientIDs = server.getClientIDs();
+	
 
 	if (clientIDs.size() == 2) {
-		Sleep(50);
+		gameStarted = true;
 		snakeState.StartNewGame();
+		return;
 	}
+	else if (clientIDs.size() > 2)
+		server.wsClose(clientID);
+	else
+		gameStarted = false;
 
 }
 
 /* called when a client disconnects */
 void closeHandler(int clientID) {
+	vector<int> clientIDs = server.getClientIDs();
+
+	if (clientIDs.size() <= 2)
+		gameStarted = false;
+
 	ostringstream os;
 	std::string player_name;
 	if (clientID == 0)
@@ -51,7 +69,7 @@ void closeHandler(int clientID) {
 		player_name = player2;
 	os << player_name << " has left.";
 
-	vector<int> clientIDs = server.getClientIDs();
+
 	for (int i = 0; i < clientIDs.size(); i++) {
 		if (clientIDs[i] != clientID)
 			server.wsSend(clientIDs[i], os.str());
@@ -77,23 +95,13 @@ void messageHandler(int clientID, string message) {
 	}
 
 	if (!named) {
-		std::cout << message;
-		std::cout << "AFTER NAMED";
 		vector<int> clientIDs = server.getClientIDs();
-		if (message.find("COMMAND:") == 0)
-			std::cout << "RECIEVED:" << message << std::endl;
 		if (message.length() > 7){
 			if (clientID == clientIDs[0]){
 				snakeState.SetPlayerInput(0, message[8]);
 			}
 			else { snakeState.SetPlayerInput(1, message[8]); }
 		}
-				/*
-				if (clientID == clientIDs[0])
-					snakeState.SetPlayerInput(0, message[8]);
-				if (clientID == clientIDs[1])
-					snakeState.SetPlayerInput(0, message[8]);
-					*/
 	}
 
 }
@@ -102,11 +110,11 @@ void messageHandler(int clientID, string message) {
 void periodicHandler() {
 	vector<int> clientIDs = server.getClientIDs();
 
-		static time_t next = time(NULL)+10;
+		static time_t next = time(NULL)+1;
 		time_t current = time(NULL);
 		
-		if (clientIDs.size() > 1) {
-			if (current  + 8.5 >= next) {
+		if (gameStarted) {
+			if (current   >= next) {
 				snakeState.UpdateBoardState();
 
 				ostringstream ss;
@@ -116,16 +124,13 @@ void periodicHandler() {
 				score1 << "1:" << player1 + " score: " << snakeState.GetPlayerScore(0);
 				score2 << "2:" << player2 + " score: " << snakeState.GetPlayerScore(1);
 
-				system("CLS");
-				snakeState.DisplayState();
-
 				for (int i = 0; i < clientIDs.size(); i++){
 					server.wsSend(clientIDs[i], ss.str());
 					server.wsSend(clientIDs[i], score1.str());
 					server.wsSend(clientIDs[i], score2.str());
 				}
 
-				next = time(NULL) + 10;
+				next = time(NULL) + 1;
 			}
 		}
 }
@@ -136,7 +141,7 @@ int main(int argc, char *argv[]) {
 	cout << "Please set server port: ";
 	cin >> port;
 
-	snakeState.StartNewGame();
+	//snakeState.StartNewGame();
 	snakeState.UpdateBoardState();
 
 	/* set event handler */
