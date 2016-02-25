@@ -13,6 +13,7 @@
 #include <time.h>
 #include "websocket.h"
 #include "Snake.h"
+#include <queue>
 
 using namespace std;
 
@@ -22,6 +23,9 @@ string player2 = "";
 
 SnakeGame snakeState;
 bool gameStarted;
+
+std::queue<std::string> message_queue;
+int delay_time = time(NULL);
 
 /* called when a client connects */
 void openHandler(int clientID) {
@@ -76,16 +80,15 @@ void closeHandler(int clientID) {
 	}
 }
 
-/* called when a client sends a message to the server */
-void messageHandler(int clientID, string message) {
+void InterpretCommand(int clientID, std::string message) {
 	bool named = false;
 	vector<int> clientIDs = server.getClientIDs();
-	
+
 	ostringstream os;
 	ostringstream os2;
 
 	if (message.find("NewPlayer:") == 0) {
-		if (message.length() > 10){
+		if (message.length() > 10) {
 			if (player1 == "")
 				player1 = message.substr(10);
 			else
@@ -96,13 +99,51 @@ void messageHandler(int clientID, string message) {
 
 	if (!named) {
 		vector<int> clientIDs = server.getClientIDs();
-		if (message.length() > 7){
-			if (clientID == clientIDs[0]){
+		if (message.length() > 7) {
+			if (clientID == clientIDs[0]) {
 				snakeState.SetPlayerInput(0, message[8]);
 			}
 			else { snakeState.SetPlayerInput(1, message[8]); }
 		}
 	}
+}
+
+/* called when a client sends a message to the server */
+void messageHandler(int clientID, string message) {
+	stringstream ss;
+	ss << clientID << ":" << message;
+	message_queue.push(ss.str());
+}
+
+void messageDelay() {
+	time_t t1 = time(NULL);
+
+	if (message_queue.size() > 0 && t1 >= delay_time) {
+		std::string message = message_queue.front();
+		int clientID = message[0] - '0';
+		int index = 0;
+
+		if (message.find("COMMAND") != std::string::npos) {
+			index = message.find("COMMAND");
+			InterpretCommand(clientID, message.substr(index));
+		}
+		else if (message.find("NewPlayer") != std::string::npos){
+			index = message.find("NewPlayer");
+			InterpretCommand(clientID, message.substr(index));
+		}
+
+		time_t t2 = time(NULL);
+
+		stringstream ss;
+
+		ss << "t0:" << message.substr(4, message.length() - (message.length() - index + 2)) << ";t1:" << t1 << ";t2:" << t2;
+		server.wsSend(clientID, ss.str());
+
+
+		delay_time = time(NULL) + (rand() % 10);
+		message_queue.pop();
+	}
+		
 
 }
 
@@ -112,6 +153,7 @@ void periodicHandler() {
 
 		static time_t next = time(NULL)+1;
 		time_t current = time(NULL);
+		messageDelay();
 		
 		if (gameStarted) {
 			if (current   >= next) {
