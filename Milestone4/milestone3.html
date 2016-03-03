@@ -96,8 +96,8 @@
 			var timeNow = Date.now();
 			if(payload.slice(0,2) == "t0"){
 				calcLatency(payload, timeNow);
-				document.getElementById("avg_latency").innerHTML = "Average Latency: ".concat(String(avgLatency/1000).concat(" seconds."));
-				send("AVGL:".concat(String(avgLatency/1000)));
+				document.getElementById("avg_latency").innerHTML = "Average Latency: ".concat(String(avgLatency).concat(" seconds."));
+				send("AVGL:".concat(String(avgLatency)));
 			}
 			else if(payload.slice(0,1) == "1") {
 				document.getElementById("p1score").innerHTML = payload.slice(2);
@@ -133,7 +133,7 @@
         var t2 = parseInt(times[2]);
         latencyTimes += (t3-t0) - (t2 - t1);
         receivedMsgs++;
-        avgLatency = latencyTimes/receivedMsgs;
+        avgLatency = latencyTimes/(receivedMsgs * 1000);
         
     }
 	
