@@ -24,8 +24,11 @@ string player2 = "";
 SnakeGame snakeState;
 bool gameStarted;
 
-std::queue<std::string> message_queue;
-int delay_time = time(NULL);
+std::queue<std::string> message1_queue;
+std::queue<std::string> message2_queue;
+
+int delay_time1 = time(NULL);
+int delay_time2 = time(NULL);
 
 /* called when a client connects */
 void openHandler(int clientID) {
@@ -110,16 +113,21 @@ void InterpretCommand(int clientID, std::string message) {
 
 /* called when a client sends a message to the server */
 void messageHandler(int clientID, string message) {
+	vector<int> clientIDs = server.getClientIDs();
+
 	stringstream ss;
 	ss << clientID << ":" << message;
-	message_queue.push(ss.str());
+	if(clientID == 0)
+		message1_queue.push(ss.str());
+	else
+		message2_queue.push(ss.str());
 }
 
 void messageDelay() {
 	time_t t1 = time(NULL);
 
-	if (message_queue.size() > 0 && t1 >= delay_time) {
-		std::string message = message_queue.front();
+	if (message1_queue.size() > 0 && t1 >= delay_time1) {
+		std::string message = message1_queue.front();
 		int clientID = message[0] - '0';
 		int index = 0;
 
@@ -135,13 +143,36 @@ void messageDelay() {
 		time_t t2 = time(NULL);
 
 		stringstream ss;
-		std::cout << message;
 		ss << "t0:" << message.substr(4, message.length() - (message.length() - index + 5)) << ";t1:" << t1 << ";t2:" << t2;
 		server.wsSend(clientID, ss.str());
 
 
-		delay_time = time(NULL) + (rand() % 5);
-		message_queue.pop();
+		delay_time1 = time(NULL) + (rand() % 5);
+		message1_queue.pop();
+	}
+
+	if (message2_queue.size() > 0 && t1 >= delay_time2) {
+		std::string message = message2_queue.front();
+		int clientID = message[0] - '0';
+		int index = 0;
+
+		if (message.find("COMMAND") != std::string::npos) {
+			index = message.find("COMMAND");
+			InterpretCommand(clientID, message.substr(index));
+		}
+		else if (message.find("NewPlayer") != std::string::npos) {
+			index = message.find("NewPlayer");
+			InterpretCommand(clientID, message.substr(index));
+		}
+
+		time_t t2 = time(NULL);
+
+		stringstream ss;
+		ss << "t0:" << message.substr(4, message.length() - (message.length() - index + 5)) << ";t1:" << t1 << ";t2:" << t2;
+		server.wsSend(clientID, ss.str());
+
+		delay_time2 = time(NULL) + (rand() % 5);
+		message2_queue.pop();
 	}
 		
 
