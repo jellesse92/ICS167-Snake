@@ -14,6 +14,7 @@
 #include "websocket.h"
 #include "Snake.h"
 #include <queue>
+#include <chrono>
 
 using namespace std;
 
@@ -29,6 +30,8 @@ std::queue<std::string> message2_queue;
 
 int delay_time1 = time(NULL);
 int delay_time2 = time(NULL);
+
+int max_latency = 1;
 
 /* called when a client connects */
 void openHandler(int clientID) {
@@ -83,6 +86,7 @@ void closeHandler(int clientID) {
 	}
 }
 
+
 void InterpretCommand(int clientID, std::string message) {
 	bool named = false;
 	vector<int> clientIDs = server.getClientIDs();
@@ -111,6 +115,16 @@ void InterpretCommand(int clientID, std::string message) {
 	}
 }
 
+int convertToInt(std::string str) {
+	int num = 0;
+	std::stringstream ss;
+	
+	ss << str;
+	ss >> num;
+
+	return num;
+}
+
 /* called when a client sends a message to the server */
 void messageHandler(int clientID, string message) {
 	vector<int> clientIDs = server.getClientIDs();
@@ -127,27 +141,37 @@ void messageDelay() {
 	time_t t1 = time(NULL);
 
 	if (message1_queue.size() > 0 && t1 >= delay_time1) {
+		
 		std::string message = message1_queue.front();
 		int clientID = message[0] - '0';
 		int index = 0;
 
-		if (message.find("COMMAND") != std::string::npos) {
-			index = message.find("COMMAND");
-			InterpretCommand(clientID, message.substr(index));
+		if (message.find("AVGL") != std::string::npos) {
+			index = message.find("AVGL");
+			std::cout << "PLAYER1 LATENCY: " << message.substr(index) << std::endl;
+			int delay = convertToInt(message.substr(index));
+			if (delay > max_latency)
+				max_latency = delay;
 		}
-		else if (message.find("NewPlayer") != std::string::npos){
-			index = message.find("NewPlayer");
-			InterpretCommand(clientID, message.substr(index));
+		else {
+			if (message.find("COMMAND") != std::string::npos) {
+				index = message.find("COMMAND");
+				InterpretCommand(clientID, message.substr(index));
+			}
+			else if (message.find("NewPlayer") != std::string::npos) {
+				index = message.find("NewPlayer");
+				InterpretCommand(clientID, message.substr(index));
+			}
+
+			time_t t2 = time(NULL);
+
+			stringstream ss;
+			ss << "t0:" << message.substr(4, message.length() - (message.length() - index + 5)) << ";t1:" << t1 << ";t2:" << t2;
+			server.wsSend(clientID, ss.str());
+
+			delay_time1 = time(NULL) + (rand() % 5);
 		}
-
-		time_t t2 = time(NULL);
-
-		stringstream ss;
-		ss << "t0:" << message.substr(4, message.length() - (message.length() - index + 5)) << ";t1:" << t1 << ";t2:" << t2;
-		server.wsSend(clientID, ss.str());
-
-
-		delay_time1 = time(NULL) + (rand() % 5);
+		
 		message1_queue.pop();
 	}
 
@@ -156,35 +180,46 @@ void messageDelay() {
 		int clientID = message[0] - '0';
 		int index = 0;
 
-		if (message.find("COMMAND") != std::string::npos) {
-			index = message.find("COMMAND");
-			InterpretCommand(clientID, message.substr(index));
+		if (message.find("AVGL") != std::string::npos) {
+			index = message.find("AVGL");
+			std::cout << "PLAYER2 LATENCY: " << message.substr(index) << std::endl;
+			int delay = convertToInt(message.substr(index));
+			if (delay > max_latency)
+				max_latency = delay;
 		}
-		else if (message.find("NewPlayer") != std::string::npos) {
-			index = message.find("NewPlayer");
-			InterpretCommand(clientID, message.substr(index));
+		else{
+			if (message.find("COMMAND") != std::string::npos) {
+				index = message.find("COMMAND");
+				InterpretCommand(clientID, message.substr(index));
+			}
+			else if (message.find("NewPlayer") != std::string::npos) {
+				index = message.find("NewPlayer");
+				InterpretCommand(clientID, message.substr(index));
+			}
+			time_t t2 = time(NULL);
+
+			stringstream ss;
+			ss << "t0:" << message.substr(4, message.length() - (message.length() - index + 5)) << ";t1:" << t1 << ";t2:" << t2;
+			server.wsSend(clientID, ss.str());
+			delay_time2 = time(NULL) + (rand() % 5);
 		}
 
-		time_t t2 = time(NULL);
-
-		stringstream ss;
-		ss << "t0:" << message.substr(4, message.length() - (message.length() - index + 5)) << ";t1:" << t1 << ";t2:" << t2;
-		server.wsSend(clientID, ss.str());
-
-		delay_time2 = time(NULL) + (rand() % 5);
 		message2_queue.pop();
 	}
 		
 
 }
-
+ 
 /* called once per select() loop */
 void periodicHandler() {
 	vector<int> clientIDs = server.getClientIDs();
 
 		static time_t next = time(NULL)+1;
-		time_t current = time(NULL);
+
 		messageDelay();
+
+		time_t current = time(NULL);
+
 		
 		if (gameStarted) {
 			if (current   >= next) {
@@ -202,7 +237,6 @@ void periodicHandler() {
 					server.wsSend(clientIDs[i], score1.str());
 					server.wsSend(clientIDs[i], score2.str());
 				}
-
 				next = time(NULL) + 1;
 			}
 		}
@@ -210,7 +244,10 @@ void periodicHandler() {
 
 int main(int argc, char *argv[]) {
 	int port;
-
+	//std::chrono::duration<std::chrono::milliseconds> duration;
+	//duration.count;
+	std::cout << "TIME: "<< std::endl;
+	
 	cout << "Please set server port: ";
 	cin >> port;
 
