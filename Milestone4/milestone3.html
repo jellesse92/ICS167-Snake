@@ -131,8 +131,8 @@
         var t0 = parseInt(times[0]);
         var t1 = parseInt(times[1]);
         var t2 = parseInt(times[2]);
-        latencyTimes += (t3-t0) - (t2 - t1);
-        receivedMsgs++;
+        latencyTimes += ((t3-t0) - (t2 - t1))/2;
+        receivedMsgs += 1;
         avgLatency = latencyTimes/(receivedMsgs * 1000);
         
     }
