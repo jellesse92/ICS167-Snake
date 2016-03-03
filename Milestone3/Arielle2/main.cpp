@@ -14,7 +14,6 @@
 #include "websocket.h"
 #include "Snake.h"
 #include <queue>
-#include <chrono>
 
 using namespace std;
 
@@ -32,6 +31,8 @@ int delay_time1 = time(NULL);
 int delay_time2 = time(NULL);
 
 int max_latency = 1;
+int last_score1 = 0;
+int last_score2 = 0;
 
 /* called when a client connects */
 void openHandler(int clientID) {
@@ -118,7 +119,6 @@ void InterpretCommand(int clientID, std::string message) {
 int convertToInt(std::string str) {
 	int num = 0;
 	std::stringstream ss;
-	
 	ss << str;
 	ss >> num;
 
@@ -137,6 +137,15 @@ void messageHandler(int clientID, string message) {
 		message2_queue.push(ss.str());
 }
 
+void setLatency(int delay) {
+	if(gameStarted)
+		max_latency = (max_latency + delay) / 2;
+	if (max_latency < 1)
+		max_latency = 1;
+	std::cout << "MAX: " << max_latency << std::endl;
+	
+}
+
 void messageDelay() {
 	time_t t1 = time(NULL);
 
@@ -148,10 +157,7 @@ void messageDelay() {
 
 		if (message.find("AVGL") != std::string::npos) {
 			index = message.find("AVGL");
-			std::cout << "PLAYER1 LATENCY: " << message.substr(index) << std::endl;
-			int delay = convertToInt(message.substr(index));
-			if (delay > max_latency)
-				max_latency = delay;
+			setLatency(convertToInt(message.substr(index+5)));
 		}
 		else {
 			if (message.find("COMMAND") != std::string::npos) {
@@ -169,7 +175,7 @@ void messageDelay() {
 			ss << "t0:" << message.substr(4, message.length() - (message.length() - index + 5)) << ";t1:" << t1 << ";t2:" << t2;
 			server.wsSend(clientID, ss.str());
 
-			delay_time1 = time(NULL) + (rand() % 5);
+			delay_time1 = time(NULL) + (rand() % 2);
 		}
 		
 		message1_queue.pop();
@@ -182,10 +188,8 @@ void messageDelay() {
 
 		if (message.find("AVGL") != std::string::npos) {
 			index = message.find("AVGL");
-			std::cout << "PLAYER2 LATENCY: " << message.substr(index) << std::endl;
-			int delay = convertToInt(message.substr(index));
-			if (delay > max_latency)
-				max_latency = delay;
+			int delay = convertToInt(message.substr(index+5));
+			setLatency(convertToInt(message.substr(index + 5)));
 		}
 		else{
 			if (message.find("COMMAND") != std::string::npos) {
@@ -201,7 +205,7 @@ void messageDelay() {
 			stringstream ss;
 			ss << "t0:" << message.substr(4, message.length() - (message.length() - index + 5)) << ";t1:" << t1 << ";t2:" << t2;
 			server.wsSend(clientID, ss.str());
-			delay_time2 = time(NULL) + (rand() % 5);
+			delay_time2 = time(NULL) + (rand() % 2);
 		}
 
 		message2_queue.pop();
@@ -210,18 +214,31 @@ void messageDelay() {
 
 }
  
+void emptyQueue(std::queue<std::string> m_queue) {
+	int size = m_queue.size();
+	for (int i = 0; i < size; i++)
+		m_queue.pop();
+}
+
 /* called once per select() loop */
 void periodicHandler() {
 	vector<int> clientIDs = server.getClientIDs();
 
-		static time_t next = time(NULL)+1;
+		static time_t next = time(NULL)+max_latency;
+		static time_t next_latency_check = time(NULL) + 10;
+
+		if (last_score1 != snakeState.GetPlayerScore(0) || last_score2 != snakeState.GetPlayerScore(0)) {
+			emptyQueue(message1_queue);
+			emptyQueue(message2_queue);
+			last_score1 = snakeState.GetPlayerScore(0);
+			last_score2 = snakeState.GetPlayerScore(1);
+		}
 
 		messageDelay();
-
 		time_t current = time(NULL);
-
 		
 		if (gameStarted) {
+
 			if (current   >= next) {
 				snakeState.UpdateBoardState();
 
@@ -237,16 +254,19 @@ void periodicHandler() {
 					server.wsSend(clientIDs[i], score1.str());
 					server.wsSend(clientIDs[i], score2.str());
 				}
-				next = time(NULL) + 1;
+				next = time(NULL) + max_latency;
 			}
+		}
+		
+
+		if (current > next_latency_check) {
+			max_latency = 1;
+			next_latency_check = time(NULL) + 15;
 		}
 }
 
 int main(int argc, char *argv[]) {
 	int port;
-	//std::chrono::duration<std::chrono::milliseconds> duration;
-	//duration.count;
-	std::cout << "TIME: "<< std::endl;
 	
 	cout << "Please set server port: ";
 	cin >> port;
