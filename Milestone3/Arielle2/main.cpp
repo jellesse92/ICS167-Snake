@@ -142,8 +142,6 @@ void setLatency(int delay) {
 		max_latency = (max_latency + delay) / 2;
 	if (max_latency < 1)
 		max_latency = 1;
-	std::cout << "MAX: " << max_latency << std::endl;
-	
 }
 
 void messageDelay() {
