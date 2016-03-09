@@ -7,6 +7,7 @@ var GW = 0; //Height of game in single units
 var w; //Width of game in pixels
 var h; //Height of game in pixels
 var cw = 10; //Cell Width
+var snake = new Array(2);
 var latencyTimes = 0;
 var receivedMsgs = 0;
 var avgLatency;
@@ -14,6 +15,7 @@ var receivedBoard = 0;
 var playerID = 0; //ASK ARIELLE TO SEND THIS WITH THE SERVER.
 var P1Dir = "D";
 var P2Dir = "A";
+
 
 //Log messages to the log output textarea
 function log( text ) {
@@ -23,6 +25,37 @@ function log( text ) {
 		//Autoscroll
 		$log[0].scrollTop = $log[0].scrollHeight - $log[0].clientHeight;
 	}
+
+	
+//connects to server at IP address and PORT supplied by user.
+function connect(){
+	log('Connecting...');
+
+	Server = new FancyWebSocket('ws://' + document.getElementById('ip').value + ':' + document.getElementById('port').value);
+	
+	//Let the user know we're connected
+	Server.bind('open', function () {
+		log('Connected.');
+		document.getElementById("cntBtn").disabled = true; // Disables connect botton
+		document.getElementById("gameArea").style.visibility = 'visible'; //makes gameArea Visible
+		document.getElementById("user_input").style.visibility = 'hidden'; //hides connection form
+		send("NewPlayer:" + document.getElementById("playerName").value);
+		//Sends username to server
+		connected = true;
+		init(); //calls gameboard
+	});
+	//Disconnection occurred.
+	Server.bind('close', function( data ) {
+		document.getElementById("cntBtn").disabled = false; //Re-enables connect button
+		document.getElementById("user_input").style.visibility = 'visible';// Re-enables connection form
+		log( "Disconnected." );
+	});
+	Server.bind('message', function( payload ) {
+		processPayload(payload);
+	});
+
+	Server.connect();
+}
 
 function send_key( key ) {
 	Server.send('key', key);
@@ -171,7 +204,7 @@ function moveSnakes(){
 
 			if(nx == -1 || nx == w/cw || ny == -1 || ny == h/cw || check_collision(nx, ny, snake[i]))
 			{
-				setTimeout(game_over, 3000); 
+				//setTimeout(game_over, 3000); 
 				return;
 			}
 
@@ -195,6 +228,19 @@ function moveSnakes(){
 	}
 	
 }
+
+function check_collision(x, y, array)
+{
+	//This function will check if the provided x/y coordinates exist
+	//in an array of cells or not
+	for(var i = 0; i < array.length; i++)
+	{
+		if(array[i].x == x && array[i].y == y)
+		 return true;
+	}
+	return false;
+}
+
 function paint_cell(x, y, color)
 {
 	ctx.fillStyle = color;
@@ -217,7 +263,7 @@ function paint()
 	//paints food to canvas
 	paint_cell(food.x, food.y, "green");
 	
-	if(receivedBoard === 0){
+	if(receivedBoard == 0){
 		moveSnakes();
 	}
 	for(var i = 0; i < snake[0].length; i++)
@@ -233,7 +279,7 @@ function paint()
 		paint_cell(c.x, c.y, "blue");
 	}
 	
-	receiedBoard = 0;
+	receivedBoard = 0;
 }
 
 $(document).keydown(function(e){
