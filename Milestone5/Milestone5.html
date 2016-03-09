@@ -1,0 +1,44 @@
+<!-- 
+===================
+Milestone 5:
+
+-- Keep Track of Game Logic Locally
+-- Send directional updates to the server
+-- The server returns the new game logic. 
+-- Change Game Logic Accordingly
+
+===================
+-->
+<head>
+<title> Snake! </title>
+<!-- Load in all scripts and stylesheets in relation to the snake game-->
+<link rel="stylesheet" type="text/css" href="milestone5_css.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<script src="fancywebsocket.js"></script>
+<script src="milestone5_js.js"></script>
+</head>
+
+<body>
+	
+	<!-- User input container. Takes: IP, PORT, USERNAME-->
+	<div id='user_input'>
+				Server ip: <input type='text' id='ip' name='ip'>
+				Server port: <input type='text' id='port' name='port'><br/>
+				Player Name: <input type='text' id = 'playerName' name ='playerName'>
+			<button type="button" id='cntBtn' onclick="connect();">Connect</button>
+	</div>
+	<!-- User Information Container... Outputs Scores, and average latency -->
+	<div id="user_info" style="width: 500px">
+		<div id="p1score" style="float:left;width:250px"></div>
+		<div id="p2score" style="float:left;width:240px"></div>
+		<br style="clear: left;"/>
+		<div id="avg_latency"></div>
+	</div>
+	<!-- Game Board Container, holds canvas used by JQUERY to output game data -->
+	<div id="gameArea" style="visibility: hidden; float:left;">
+		<canvas id="canvas" width="500" height="500"></canvas>
+	</div>
+	<!-- Log Output Container; used for testing and verifying connection -->
+	<textarea id='log' name='log' readonly='readonly' style="float:left"></textarea>
+	
+</body>

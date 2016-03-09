@@ -1,0 +1,29 @@
+/*CSS For Snake Game*/
+input, textarea {
+	border:1px solid #CCC;
+	margin:0px;
+	padding:0px;
+	}
+h2 {
+	font-family: Calibri, Candara, Segoe, 'Segoe UI', Optima, Arial, sans-serif;
+	}
+#body {
+	max-width:800px;
+	margin:auto;
+	}
+#log {
+	width:600px;
+	height:60px;
+	}
+#message {
+	width:100%;
+	line-height:20px;
+	}
+#user_input{ 
+	line-height: 30px;
+	font-family: Calibri, Candara, Segoe, 'Segoe UI', Optima, Arial, sans-serif;
+	text-align: justify; 
+	width: 800px}
+#user_input input{
+	line-height: 20px; 
+	}
