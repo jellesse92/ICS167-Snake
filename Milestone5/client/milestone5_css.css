@@ -12,14 +12,19 @@ h2 {
 	margin:auto;
 	}
 #log {
-	width:600px;
-	height:60px;
+	width:500px;
+	height:600px;
 	}
 #message {
 	width:100%;
 	line-height:20px;
 	}
 #user_input{ 
+	line-height: 30px;
+	font-family: Calibri, Candara, Segoe, 'Segoe UI', Optima, Arial, sans-serif;
+	text-align: justify; 
+	width: 800px}
+#user_info{ 
 	line-height: 30px;
 	font-family: Calibri, Candara, Segoe, 'Segoe UI', Optima, Arial, sans-serif;
 	text-align: justify; 
