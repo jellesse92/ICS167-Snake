@@ -161,9 +161,14 @@ bool SnakeGame::UpdateBoard()
 {
 	bool gameOver = false;
 
-	if (snakeBody[0][0] == snakeBody[1][0])
+	if (snakeBody[0][0] == snakeBody[1][0]) {
+		playerScore[0]++;
+		playerScore[1]++;
 		gameOver = true;
+	}
 	else if (playerMov[0] == playerMov[1]*-1 && snakeBody[0][0] == snakeBody[1][0] - playerMov[1]) {
+		playerScore[0]++;
+		playerScore[1]++;
 		gameOver = true;
 	}
 	else {
