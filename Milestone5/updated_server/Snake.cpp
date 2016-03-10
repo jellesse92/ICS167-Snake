@@ -153,7 +153,7 @@ bool SnakeGame::CheckHitBoundary(int move, int direction)
 {
 	return ((move % (BOARD_WIDTH) == 0 && direction == 1) ||
 		((move + 1) % (BOARD_WIDTH) == 0 && direction == -1) ||
-		(move >= BOARD_HEIGHT*BOARD_HEIGHT) ||
+		(move >= BOARD_WIDTH*BOARD_HEIGHT) ||
 		move < 0);
 }
 

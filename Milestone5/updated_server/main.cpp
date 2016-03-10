@@ -38,12 +38,17 @@ int delay_send2 = time(NULL);
 int last_score1 = 0;
 int last_score2 = 0;
 
+int resend_count = 0;
+
 bool update_clients = false;
 
-void emptyQueue(std::queue<std::string> m_queue) {
-	int size = m_queue.size();
+void emptyQueue() {
+	int size = message_queue[0].size();
 	for (int i = 0; i < size; i++)
-		m_queue.pop();
+		message_queue[0].pop();
+	size = message_queue[1].size();
+	for (int i = 0; i < size; i++)
+		message_queue[1].pop();
 }
 
 /* called when a client connects */
@@ -75,10 +80,10 @@ void openHandler(int clientID) {
 		gameStarted = true;
 		message_to_process[0] = "";
 		message_to_process[1] = "";
-		emptyQueue(message_queue[0]);
-		emptyQueue(message_queue[1]);
+		emptyQueue();
 		last_move[0] = 'D';
 		last_move[1] = 'A';
+		resend_count = 0;
 		snakeState.StartNewGame();
 		return;
 	}
@@ -136,18 +141,6 @@ void InterpretCommand(int clientID, std::string message) {
 				snakeState.SetPlayerInput(0, message[8]);
 			}
 			else { snakeState.SetPlayerInput(1, message[8]); }
-			/*
-			ostringstream ss;
-			ostringstream ssMove;
-
-			ss << "GB:" << snakeState.GetBoardState();
-			ssMove << "MOVE:" << snakeState.GetPlayerDirection(0) << snakeState.GetPlayerDirection(1);
-
-			for (int i = 0; i < clientIDs.size(); i++) {
-				server.wsSend(clientIDs[i], ss.str());
-				server.wsSend(clientIDs[i], ssMove.str());
-			}
-			*/
 		}
 	}
 }
@@ -175,7 +168,6 @@ void messageHandler(int clientID, string message) {
 
 void ProcessMessages() {
 	time_t t1 = time(NULL);
-
 
 	int index = 0;
 	if (message_to_process[0].find("AVGL") != std::string::npos) {
@@ -221,11 +213,6 @@ void ProcessMessages() {
 		server.wsSend(1, ss.str());
 		delay_time2 = time(NULL) + (rand() % 2);
 	}
-
-
-
-
-
 }
 
 void messageDelay() {
@@ -252,13 +239,20 @@ void periodicHandler() {
 	vector<int> clientIDs = server.getClientIDs();
 
 		if (last_score1 != snakeState.GetPlayerScore(0) || last_score2 != snakeState.GetPlayerScore(1) ||
-			last_move[0] != snakeState.GetPlayerDirection(0) || last_move[1] != snakeState.GetPlayerDirection(1)) {
-			emptyQueue(message_queue[0]);
-			emptyQueue(message_queue[1]);
+			last_move[0] != snakeState.GetPlayerDirection(0) || last_move[1] != snakeState.GetPlayerDirection(1) ||
+			resend_count >= 5) {
+			
+			if (last_score1 != snakeState.GetPlayerScore(0) || last_score2 != snakeState.GetPlayerScore(1)) {
+				snakeState.SetPlayerInput(0, 'D');
+				snakeState.SetPlayerInput(1, 'A');
+			}
+			
+			emptyQueue();
 			message_to_process[0] = "";
 			message_to_process[1] = "";
 			last_score1 = snakeState.GetPlayerScore(0);
 			last_score2 = snakeState.GetPlayerScore(1);
+
 			last_move[0] = snakeState.GetPlayerDirection(0);
 			last_move[1] = snakeState.GetPlayerDirection(1);
 
@@ -280,6 +274,8 @@ void periodicHandler() {
 				server.wsSend(clientIDs[i], score2.str());
 				server.wsSend(clientIDs[i], ssMove.str());
 			}
+
+			resend_count = 0;
 		}
 		messageDelay();
 
@@ -299,6 +295,7 @@ void periodicHandler() {
 					ProcessMessages();
 					message_to_process[0] = "";
 					message_to_process[1] = "";
+					resend_count++;
 				}
 				snakeState.UpdateBoardState();
 				next = current + interval;
