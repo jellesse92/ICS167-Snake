@@ -166,7 +166,6 @@ void messageHandler(int clientID, string message) {
 
 	stringstream ss;
 	ss << clientID << ":" << message;
-	std::cout << "CLIENT SENT: " << ss.str() << std::endl;
 	if(clientID == 0)
 		message_queue[0].push(ss.str());
 	else
@@ -176,8 +175,6 @@ void messageHandler(int clientID, string message) {
 void ProcessMessages() {
 	time_t t1 = time(NULL);
 
-	std::cout << "MESSAGE1:" << message_to_process[0] << std::endl;
-	std::cout << "MESSAGE2:" << message_to_process[1] << std::endl;
 
 	int index = 0;
 	if (message_to_process[0].find("AVGL") != std::string::npos) {
@@ -236,8 +233,6 @@ void messageDelay() {
 	if(message_to_process[0] == "")
 		if (message_queue[0].size() > 0){
 			message_to_process[0] = message_queue[0].front();
-			std::cout << "SOURCE: "<<message_queue[0].front() << std::endl;
-			std::cout << "WHOLE: " << message_to_process[0] << std::endl;
 			message_queue[0].pop();
 			time_received[0] = t1;
 		}
@@ -302,13 +297,10 @@ void periodicHandler() {
 					message_to_process[0] = "";
 					message_to_process[1] = "";
 				}
-
 				snakeState.UpdateBoardState();
 				next = current + interval;
 			}
 		}
-
-		
 }
 
 int main(int argc, char *argv[]) {
