@@ -64,6 +64,7 @@ void openHandler(int clientID) {
 	ssMove << "MOVE:" << snakeState.GetPlayerDirection(0) << snakeState.GetPlayerDirection(1);
 	playerID << "ID:" << clientID;
 
+
 	server.wsSend(clientID, playerID.str());
 	server.wsSend(clientID, game_width.str());
 	server.wsSend(clientID, game_height.str());
@@ -265,6 +266,8 @@ void periodicHandler() {
 			ostringstream score1;
 			ostringstream score2;
 			ostringstream ssMove;
+
+			snakeState.UpdateBoardState();
 
 			ss << "GB:" << snakeState.GetBoardState();
 			score1 << "1:" << player1 + " score: " << snakeState.GetPlayerScore(0);
