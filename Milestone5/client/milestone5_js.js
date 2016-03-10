@@ -105,41 +105,48 @@ function connect(){
  function processPayload(payload){
 	//payload is received as one long string, slices and processes based off of prefix
 	var timeNow = Date.now();
-	if(payload.slice(0,2) == "t0"){
-		calcLatency(payload, timeNow);
-		document.getElementById("avg_latency").innerHTML = "Average Latency: ".concat(String(avgLatency).concat(" seconds."));
-		//send("AVGL:".concat(String(avgLatency)));
+	var commands = []
+	commands = payload.split("_");
+	for(var i=0; i < commands.length; i++){
+		if(commands[i].slice(0,2) == "t0"){
+			calcLatency(commands[i], timeNow);
+			document.getElementById("avg_latency").innerHTML = "Average Latency: ".concat(String(avgLatency).concat(" seconds."));
+			//send("AVGL:".concat(String(avgLatency)));
+		}
+		else if(commands[i].slice(0,1) == "1") {
+			document.getElementById("p1score").innerHTML = commands[i].slice(2);
+			}
+		else if (commands[i].slice(0,1) == "2") {
+			document.getElementById("p2score").innerHTML = commands[i].slice(2);
+			}
+		else if(commands[i].slice(0,2) == "GW"){
+			GW = parseInt(commands[i].slice(3));
+			w = GW * 10;
+		}
+		else if(commands[i].slice(0,2) == "GH"){
+			GH = parseInt(commands[i].slice(3));
+			h = GH * 10; 
+			}
+		else if(commands[i].slice(0,2) == "GB"){
+			getBoard(commands[i].slice(3));
+			
+		} else if(commands[i].slice(0,2) == "ID"){
+			playerID = parseInt(commands[i].slice(3));
+			log(playerID);
+		} else if (commands[i].slice(0,4) == "MOVE"){
+			var directions = commands[i].slice(5);
+			log("MOVE: " + directions);
+			if(playerID == 0){	
+				P2Dir = directions[1];
+			} else {
+				P1Dir = directions[0];
+			}
+		} else if(commands[i].slice(0,2) == "RT"){
+			P1Dir = "D";
+			P2Dir = "A";
+		}
+		else {log(commands[i]);}
 	}
-	else if(payload.slice(0,1) == "1") {
-		document.getElementById("p1score").innerHTML = payload.slice(2);
-		}
-	else if (payload.slice(0,1) == "2") {
-		document.getElementById("p2score").innerHTML = payload.slice(2);
-		}
-	else if(payload.slice(0,2) == "GW"){
-		GW = parseInt(payload.slice(3));
-		w = GW * 10;
-	}
-	else if(payload.slice(0,2) == "GH"){
-		GH = parseInt(payload.slice(3));
-		h = GH * 10; 
-		}
-	else if(payload.slice(0,2) == "GB"){
-		getBoard(payload.slice(3));
-		
-	} else if(payload.slice(0,2) == "ID"){
-		playerID = parseInt(payload.slice(3));
-		log(playerID);
-	} else if (payload.slice(0,4) == "MOVE"){
-		var directions = payload.slice(5);
-		log("MOVE: " + directions);
-		if(playerID == 0){	
-			P2Dir = directions[1];
-		} else {
-			P1Dir = directions[0];
-		}
-	}
-	else {log(payload);}
 }
 function calcLatency(latencyText, t3){
 	//calculates latency given the text supplied and T3
@@ -194,7 +201,7 @@ function init()
 		receivedMsgs = 0;
 		if(typeof game_loop != "undefined") clearInterval(game_loop);
 		receivedBoard = 0;
-		game_loop = setInterval(paint, 750);
+		game_loop = setInterval(paint, 501);
 	} else { setTimeout(init, 4000);}
 }
 
@@ -264,6 +271,15 @@ function paint_cell(x, y, color)
 
 function paint()
 {
+	if(playerID == 0){
+		
+		toSend = "COMMAND:".concat(P1Dir);
+		send(toSend);
+	}
+	else { 
+		toSend = "COMMAND:".concat(P2Dir);
+		send(toSend);
+	}
 	//To avoid the snake trail we need to paint the BG on every frame
 	//Lets paint the canvas now
 	
@@ -277,10 +293,10 @@ function paint()
 			
 	//paints food to canvas
 	paint_cell(food.x, food.y, "green");
-	
-	if(receivedBoard == 0){
-		moveSnakes();
-	}
+	moveSnakes();
+	//if(receivedBoard == 0){
+		
+	//}
 	for(var i = 0; i < snake[0].length; i++)
 	{
 		var c = snake[0][i];
@@ -295,19 +311,7 @@ function paint()
 	}
 	
 	receivedBoard = 0;
-	log(playerID);
-	log(playerID == 0);
-	if(playerID == 0){
-		
-		toSend = "COMMAND:".concat(P1Dir);
-		send(toSend);
-		log(P1Dir);
-	}
-	else { 
-		toSend = "COMMAND:".concat(P2Dir);
-		send(toSend);
-		log(P2Dir);
-	}
+
 	
 }
 
@@ -321,7 +325,7 @@ $(document).keydown(function(e){
 	} 
 	else {
 		direction = P2Dir;
-		}
+	}
 	if(key == "37" && direction != "D") direction = "A";
 	else if(key == "38" && direction != "S") direction = "W";
 	else if(key == "39" && direction != "A") direction = "D";
@@ -332,10 +336,17 @@ $(document).keydown(function(e){
 	else if(key == "83" && direction != "W") direction = "S";
 	if(["W","A","S","D"].indexOf(direction) >= 0){
 		//log(direction);
-		if(playerID == 0){P1Dir = direction;}
-		else {P2Dir = direction;}
-		toSend = "COMMAND:".concat(direction);
-		send(toSend);
+
+		if(playerID == 0) 
+		{
+			P1Dir = direction;
+		} 
+		else {
+			P2Dir = direction;
+		}
+		
+		
+	
 	}
 })
 
