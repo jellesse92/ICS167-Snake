@@ -142,8 +142,11 @@ function connect(){
 				P1Dir = directions[0];
 			}
 		} else if(commands[i].slice(0,2) == "RT"){
-			P1Dir = "D";
-			P2Dir = "A";
+			if(commands[i].slice(3) == "T"){
+				P1Dir = "D";
+				P2Dir = "A";
+			}
+			
 		}
 		else {log(commands[i]);}
 	}
