@@ -15,7 +15,6 @@ var receivedMsgs = 0;
 var avgLatency;
 var receivedBoard = 0;
 var playerID = 0; //ASK ARIELLE TO SEND THIS WITH THE SERVER.
-var direction;
 var P1Dir = "D";
 var P2Dir = "A";
 var food;
@@ -134,6 +133,7 @@ function connect(){
 		var directions = payload.slice(4);
 		P1Dir = directions[0];
 		P2Dir = directions[1];
+		log("Changed Direction!");
 	}
 	else {log(payload);}
 }
@@ -186,13 +186,16 @@ function init()
 		d = "right"; //default direction
 		//Lets move the snake now using a timer which will trigger the paint function
 		//every 60ms
+		latencyTimes = 0;
+		receivedMsgs = 0;
 		if(typeof game_loop != "undefined") clearInterval(game_loop);
 		receivedBoard = 0;
-		game_loop = setInterval(paint, 60);
+		game_loop = setInterval(paint, 1000);
 	} else { setTimeout(init, 4000);}
 }
 
 function moveSnakes(){
+	var tempdir;
 	for(var i =0; i < 2; i++){
 		var nx = snake[i][0].x;
 			var ny = snake[i][0].y;
@@ -200,12 +203,12 @@ function moveSnakes(){
 			//These were the position of the head cell.
 			//We will increment it to get the new head position
 			//Lets add proper direction based movement now
-			if(i === 0){direction = P1Dir;} 
-			else{ direction = P2Dir;}
-			if(direction == "D") nx++;
-			else if(direction == "A") nx--;
-			else if(direction == "W") ny--;
-			else if(direction == "S") ny++;
+			if(i === 0){tempdir = P1Dir;} 
+			else{ tempdir = P2Dir;}
+			if(temp == "D") nx++;
+			else if(tempdir == "A") nx--;
+			else if(tempdir == "W") ny--;
+			else if(tempdir == "S") ny++;
 
 			if(nx == -1 || nx == w/cw || ny == -1 || ny == h/cw || check_collision(nx, ny, snake[i]))
 			{
@@ -287,15 +290,24 @@ function paint()
 	}
 	
 	receivedBoard = 0;
-	toSend = "COMMAND:".concat(direction);
-	if(direction != ""){send(toSend);}
+	if(playerID == 0){
+		
+		toSend = "COMMAND:".concat(P1Dir);
+		send(toSend);
+		log(P1Dir);
+	}
+	else { 
+		toSend = "COMMAND:".concat(P2Dir);
+		send(toSend);
+		log(P2Dir);
+	}
 	
 }
 
 $(document).keydown(function(e){
 	//receives key pressed, identifies direction, sends movement of snake. 
 	var key = e.which;
-	direction = "";
+	var direction;
 	if(key == "37" && direction != "D") direction = "A";
 	else if(key == "38" && direction != "S") direction = "W";
 	else if(key == "39" && direction != "A") direction = "D";
