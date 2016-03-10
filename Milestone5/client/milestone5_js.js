@@ -1,3 +1,5 @@
+//http://thecodeplayer.com/walkthrough/html5-game-tutorial-make-a-snake-game-using-html5-canvas-jquery
+
 //Variables
 var Server;
 var connected = false;
@@ -13,8 +15,10 @@ var receivedMsgs = 0;
 var avgLatency;
 var receivedBoard = 0;
 var playerID = 0; //ASK ARIELLE TO SEND THIS WITH THE SERVER.
+var direction;
 var P1Dir = "D";
 var P2Dir = "A";
+var food;
 
 
 //Log messages to the log output textarea
@@ -24,7 +28,7 @@ function log( text ) {
 		$log.append(($log.val()?"\n":'')+text);
 		//Autoscroll
 		$log[0].scrollTop = $log[0].scrollHeight - $log[0].clientHeight;
-	}
+}
 
 	
 //connects to server at IP address and PORT supplied by user.
@@ -152,27 +156,27 @@ function getBoard(payload){
 	//takes gameboard information sent from server and translates it to snakes
 	snake[0] = [];
 	snake[1] = [];
-	gameBoard = new Array(GH);
+	var gameBoard = new Array(GH);
 	for(var i = 0; i < GH; i++){ gameBoard[i] = new Array(GW);}
-	var j = 0;
-	for (var i = 0; i < payload.length; i++) {
-	  if (i != 0 && i % GW === 0) {
-		j++;
-	  }
-	  var letter = payload[i];
-	  var loc = i % GW;
-	  gameBoard[j][loc] = letter;
-	  if (letter == "1" || letter == "2") {
-		  num =parseInt(letter) 
-		snake[num-1].push({
-		  x: loc,
-		  y: j
-		});
-	  }
-	  else if (letter =="F"){
-		  food = {x: loc, y: j};
-		}	
-	}
+		var j = 0;
+		for (var i = 0; i < payload.length; i++) {
+		  if (i != 0 && i % GW === 0) {
+			j++;
+		  }
+		  var letter = payload[i];
+		  var loc = i % GW;
+		  gameBoard[j][loc] = letter;
+		  if (letter == "1" || letter == "2") {
+			  num =parseInt(letter) 
+			snake[num-1].push({
+			  x: loc,
+			  y: j
+			});
+		  }
+		  else if (letter =="F"){
+			  food = {x: loc, y: j};
+			}	
+		}
 	receivedBoard = 1;
 }
 
@@ -183,6 +187,7 @@ function init()
 		//Lets move the snake now using a timer which will trigger the paint function
 		//every 60ms
 		if(typeof game_loop != "undefined") clearInterval(game_loop);
+		receivedBoard = 0;
 		game_loop = setInterval(paint, 60);
 	} else { setTimeout(init, 4000);}
 }
@@ -195,7 +200,7 @@ function moveSnakes(){
 			//These were the position of the head cell.
 			//We will increment it to get the new head position
 			//Lets add proper direction based movement now
-			if(i === 0){direction = P1Dir;}
+			if(i === 0){direction = P1Dir;} 
 			else{ direction = P2Dir;}
 			if(direction == "D") nx++;
 			else if(direction == "A") nx--;
@@ -254,6 +259,8 @@ function paint()
 	//To avoid the snake trail we need to paint the BG on every frame
 	//Lets paint the canvas now
 	
+
+	
 	ctx.fillStyle = "white";
 	ctx.fillRect(0, 0, w, h);
 	ctx.strokeStyle = "black";
@@ -280,12 +287,15 @@ function paint()
 	}
 	
 	receivedBoard = 0;
+	toSend = "COMMAND:".concat(direction);
+	if(direction != ""){send(toSend);}
+	
 }
 
 $(document).keydown(function(e){
 	//receives key pressed, identifies direction, sends movement of snake. 
 	var key = e.which;
-	var direction = "";
+	direction = "";
 	if(key == "37" && direction != "D") direction = "A";
 	else if(key == "38" && direction != "S") direction = "W";
 	else if(key == "39" && direction != "A") direction = "D";
@@ -306,6 +316,3 @@ $(document).ready(function(){
 	ctx = canvas.getContext("2d");
 })
 	
-		
-		
-		
