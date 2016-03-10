@@ -108,7 +108,7 @@ function connect(){
 	if(payload.slice(0,2) == "t0"){
 		calcLatency(payload, timeNow);
 		document.getElementById("avg_latency").innerHTML = "Average Latency: ".concat(String(avgLatency).concat(" seconds."));
-		send("AVGL:".concat(String(avgLatency)));
+		//send("AVGL:".concat(String(avgLatency)));
 	}
 	else if(payload.slice(0,1) == "1") {
 		document.getElementById("p1score").innerHTML = payload.slice(2);
@@ -128,10 +128,12 @@ function connect(){
 		getBoard(payload.slice(3));
 		
 	} else if(payload.slice(0,2) == "ID"){
-		playerID = parseInt(payload.slice(2));
+		playerID = parseInt(payload.slice(3));
+		log(playerID);
 	} else if (payload.slice(0,4) == "MOVE"){
-		var directions = payload.slice(4);
-		if(playerID == 1){	
+		var directions = payload.slice(5);
+		log("MOVE: " + directions);
+		if(playerID == 0){	
 			P2Dir = directions[1];
 		} else {
 			P1Dir = directions[0];
@@ -192,7 +194,7 @@ function init()
 		receivedMsgs = 0;
 		if(typeof game_loop != "undefined") clearInterval(game_loop);
 		receivedBoard = 0;
-		game_loop = setInterval(paint, 500);
+		game_loop = setInterval(paint, 750);
 	} else { setTimeout(init, 4000);}
 }
 
@@ -205,12 +207,13 @@ function moveSnakes(){
 			//These were the position of the head cell.
 			//We will increment it to get the new head position
 			//Lets add proper direction based movement now
-			if(i === 0){tempdir = P1Dir;} 
+			if(i == 0){tempdir = P1Dir;} 
 			else{ tempdir = P2Dir;}
-			if(temp == "D") nx++;
+			if(tempdir == "D") nx++;
 			else if(tempdir == "A") nx--;
 			else if(tempdir == "W") ny--;
 			else if(tempdir == "S") ny++;
+			tempdir = "";
 
 			if(nx == -1 || nx == w/cw || ny == -1 || ny == h/cw || check_collision(nx, ny, snake[i]))
 			{
@@ -228,13 +231,13 @@ function moveSnakes(){
 			}
 			else
 			{
-				var tail = snake[0].pop(); //pops out the last cell
+				var tail = snake[i].pop(); //pops out the last cell
 				tail.x = nx; tail.y = ny;
 			}
 
 			//The snake can now eat the food.
 			
-			snake[0].unshift(tail); //puts back the tail as the first cell
+			snake[i].unshift(tail); //puts back the tail as the first cell
 	}
 	
 }
@@ -292,6 +295,8 @@ function paint()
 	}
 	
 	receivedBoard = 0;
+	log(playerID);
+	log(playerID == 0);
 	if(playerID == 0){
 		
 		toSend = "COMMAND:".concat(P1Dir);
@@ -310,6 +315,13 @@ $(document).keydown(function(e){
 	//receives key pressed, identifies direction, sends movement of snake. 
 	var key = e.which;
 	var direction;
+	if(playerID == 0) 
+	{
+		direction = P1Dir;
+	} 
+	else {
+		direction = P2Dir;
+		}
 	if(key == "37" && direction != "D") direction = "A";
 	else if(key == "38" && direction != "S") direction = "W";
 	else if(key == "39" && direction != "A") direction = "D";
@@ -318,10 +330,13 @@ $(document).keydown(function(e){
 	else if(key == "87" && direction != "S") direction = "W";
 	else if(key == "68" && direction != "A") direction = "D";
 	else if(key == "83" && direction != "W") direction = "S";
-	if(playerID == 0){P1Dir = direction}
-	else {P2Dir = direction;}
-	toSend = "COMMAND:".concat(direction);
-	if(direction != ""){send(toSend);}
+	if(["W","A","S","D"].indexOf(direction) >= 0){
+		//log(direction);
+		if(playerID == 0){P1Dir = direction;}
+		else {P2Dir = direction;}
+		toSend = "COMMAND:".concat(direction);
+		send(toSend);
+	}
 })
 
 $(document).ready(function(){
