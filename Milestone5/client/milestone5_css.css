@@ -32,3 +32,9 @@ h2 {
 #user_input input{
 	line-height: 20px; 
 	}
+#p1score {
+	color: red;
+}
+#p2score { 
+	color: blue;
+	}

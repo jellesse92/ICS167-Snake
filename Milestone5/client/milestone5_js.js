@@ -143,6 +143,7 @@ function connect(){
 			}
 		} else if(commands[i].slice(0,2) == "RT"){
 			if(commands[i].slice(3) == "T"){
+				log("Restarting Game");
 				P1Dir = "D";
 				P2Dir = "A";
 			}
@@ -296,10 +297,10 @@ function paint()
 			
 	//paints food to canvas
 	paint_cell(food.x, food.y, "green");
-	moveSnakes();
-	//if(receivedBoard == 0){
+	if(receivedBoard == 0){
+		moveSnakes();
 		
-	//}
+	}
 	for(var i = 0; i < snake[0].length; i++)
 	{
 		var c = snake[0][i];

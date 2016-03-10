@@ -17,7 +17,7 @@
 
 using namespace std;
 
-const int MAX_LAG = 200;
+const int MAX_LAG = 50;
 
 webSocket server;
 string player1 = "";
