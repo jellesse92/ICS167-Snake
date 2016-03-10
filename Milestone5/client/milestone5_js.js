@@ -131,9 +131,11 @@ function connect(){
 		playerID = parseInt(payload.slice(2));
 	} else if (payload.slice(0,4) == "MOVE"){
 		var directions = payload.slice(4);
-		P1Dir = directions[0];
-		P2Dir = directions[1];
-		log("Changed Direction!");
+		if(playerID == 1){	
+			P2Dir = directions[1];
+		} else {
+			P1Dir = directions[0];
+		}
 	}
 	else {log(payload);}
 }
@@ -190,7 +192,7 @@ function init()
 		receivedMsgs = 0;
 		if(typeof game_loop != "undefined") clearInterval(game_loop);
 		receivedBoard = 0;
-		game_loop = setInterval(paint, 1000);
+		game_loop = setInterval(paint, 500);
 	} else { setTimeout(init, 4000);}
 }
 
