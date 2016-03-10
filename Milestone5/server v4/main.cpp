@@ -228,16 +228,14 @@ void messageDelay() {
 /* called once per select() loop */
 void periodicHandler() {
 	vector<int> clientIDs = server.getClientIDs();
-
+	std::string reset = "RTF";
 		if (last_score1 != snakeState.GetPlayerScore(0) || last_score2 != snakeState.GetPlayerScore(1) ||
 			last_move[0] != snakeState.GetPlayerDirection(0) || last_move[1] != snakeState.GetPlayerDirection(1)) {
 			
 			if (last_score1 != snakeState.GetPlayerScore(0) || last_score2 != snakeState.GetPlayerScore(1)) {
 				snakeState.SetPlayerInput(0, 'D');
 				snakeState.SetPlayerInput(1, 'A');
-				for (int i = 0; i < clientIDs.size(); i++) {
-					server.wsSend(clientIDs[i], "RT");
-				}
+				reset = "RTT";
 			}
 			
 			emptyQueue();
@@ -288,7 +286,7 @@ void periodicHandler() {
 					send_queue[1].pop();
 				}
 			}
-
+			
 			if (current   >= next) {
 				if (message_to_process[0] != "" && message_to_process[1] != "")
 				{
@@ -300,11 +298,12 @@ void periodicHandler() {
 						ostringstream ss;
 						time_t t2 = time(NULL);
 
-						ss << "GB:" <<snakeState.GetBoardState() << "_"
-						   << "1:" << player1 + " score: " << snakeState.GetPlayerScore(0) << "_"
-						   << "2:" << player2 + " score: " << snakeState.GetPlayerScore(1) << "_"
-						   << "MOVE:" << snakeState.GetPlayerDirection(0) << snakeState.GetPlayerDirection(1)
-						   << "t0:" << time_from_client[i] << ";t1:" << time_received[i] << ";t2:" << t2;
+						ss << "GB:" << snakeState.GetBoardState() << "_"
+							<< "1:" << player1 + " score: " << snakeState.GetPlayerScore(0) << "_"
+							<< "2:" << player2 + " score: " << snakeState.GetPlayerScore(1) << "_"
+							<< "MOVE:" << snakeState.GetPlayerDirection(0) << snakeState.GetPlayerDirection(1) << "_"
+							<< "t0:" << time_from_client[i] << ";t1:" << time_received[i] << ";t2:" << t2 << "_"
+							<< reset;
 						send_queue[i].push(ss.str());
 						std::cout << "SEND:" << send_queue[i].front() << std::endl;
 					}
