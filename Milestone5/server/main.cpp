@@ -23,16 +23,23 @@ string player2 = "";
 
 SnakeGame snakeState;
 bool gameStarted;
+std::queue<std::string> message_queue[2];
+std::queue<std::string> send_queue[2];
 
-std::queue<std::string> message1_queue;
-std::queue<std::string> message2_queue;
-
-int delay_time1 = time(NULL);
-int delay_time2 = time(NULL);
+time_t delay_time1 = time(NULL);
+time_t delay_time2 = time(NULL);
+int delay_send1 = time(NULL);
+int delay_send2 = time(NULL);
 
 int max_latency = 1;
 int last_score1 = 0;
 int last_score2 = 0;
+
+void emptyQueue(std::queue<std::string> m_queue) {
+	int size = m_queue.size();
+	for (int i = 0; i < size; i++)
+		m_queue.pop();
+}
 
 /* called when a client connects */
 void openHandler(int clientID) {
@@ -60,6 +67,8 @@ void openHandler(int clientID) {
 
 	if (clientIDs.size() == 2) {
 		gameStarted = true;
+		emptyQueue(message_queue[0]);
+		emptyQueue(message_queue[1]);
 		snakeState.StartNewGame();
 		return;
 	}
@@ -148,30 +157,25 @@ void messageHandler(int clientID, string message) {
 	stringstream ss;
 	ss << clientID << ":" << message;
 	if(clientID == 0)
-		message1_queue.push(ss.str());
+		message_queue[0].push(ss.str());
 	else
-		message2_queue.push(ss.str());
-}
-
-void setLatency(int delay) {
-	if(gameStarted)
-		max_latency = (max_latency + delay) / 2;
-	if (max_latency < 1)
-		max_latency = 1;
+		message_queue[1].push(ss.str());
 }
 
 void messageDelay() {
 	time_t t1 = time(NULL);
 
-	if (message1_queue.size() > 0 && t1 >= delay_time1) {
+
+	if (message_queue[0].size() > 0 && t1 >= delay_time1) {
 		
-		std::string message = message1_queue.front();
+		std::string message = message_queue[0].front();
+		
 		int clientID = message[0] - '0';
 
 		int index = 0;
 		if (message.find("AVGL") != std::string::npos) {
 			index = message.find("AVGL");
-			//setLatency(convertToInt(message.substr(index+5)));
+
 		}
 		else {
 			if (message.find("COMMAND") != std::string::npos) {
@@ -192,18 +196,17 @@ void messageDelay() {
 			delay_time1 = time(NULL) + (rand() % 2);
 		}
 		
-		message1_queue.pop();
+		message_queue[0].pop();
 	}
 
-	if (message2_queue.size() > 0 && t1 >= delay_time2) {
-		std::string message = message2_queue.front();
+	if (message_queue[1].size() > 0 && t1 >= delay_time2) {
+		std::string message = message_queue[1].front();
 		int clientID = message[0] - '0';
 		int index = 0;
 
 		if (message.find("AVGL") != std::string::npos) {
 			index = message.find("AVGL");
 			int delay = convertToInt(message.substr(index+5));
-			setLatency(convertToInt(message.substr(index + 5)));
 		}
 		else{
 			if (message.find("COMMAND") != std::string::npos) {
@@ -222,28 +225,20 @@ void messageDelay() {
 			delay_time2 = time(NULL) + (rand() % 2);
 		}
 
-		message2_queue.pop();
+		message_queue[1].pop();
 	}
 		
 
-}
- 
-void emptyQueue(std::queue<std::string> m_queue) {
-	int size = m_queue.size();
-	for (int i = 0; i < size; i++)
-		m_queue.pop();
 }
 
 /* called once per select() loop */
 void periodicHandler() {
 	vector<int> clientIDs = server.getClientIDs();
 
-		static time_t next = time(NULL)+max_latency;
-		static time_t next_latency_check = time(NULL) + 10;
-
-		if (last_score1 != snakeState.GetPlayerScore(0) || last_score2 != snakeState.GetPlayerScore(0)) {
-			emptyQueue(message1_queue);
-			emptyQueue(message2_queue);
+		if (last_score1 != snakeState.GetPlayerScore(0) || last_score2 != snakeState.GetPlayerScore(1)) {
+			emptyQueue(message_queue[0]);
+			emptyQueue(message_queue[1]);
+			std::cout << "SIZE: " << message_queue[0].size() << std::endl;
 			last_score1 = snakeState.GetPlayerScore(0);
 			last_score2 = snakeState.GetPlayerScore(1);
 
@@ -260,25 +255,25 @@ void periodicHandler() {
 				server.wsSend(clientIDs[i], score2.str());
 			}
 		}
-
 		messageDelay();
-		time_t current = time(NULL);
+
+		LARGE_INTEGER li;
+		if (!QueryPerformanceFrequency(&li))
+			cout << "QueryPerformanceFrequency failed!\n";
+		static double freq = double(li.QuadPart) / 1000.0;
+		QueryPerformanceCounter(&li);
+		__int64 current = li.QuadPart;
+		static __int64 interval = (double)500 * freq; // 500 ms
+		static __int64 next = current + interval;
 		
 		if (gameStarted) {
-
 			if (current   >= next) {
 				snakeState.UpdateBoardState();
-
-				
-				next = time(NULL) + max_latency;
+				next = current + interval;
 			}
 		}
-		
 
-		if (current > next_latency_check) {
-			max_latency = 1;
-			next_latency_check = time(NULL) + 15;
-		}
+		
 }
 
 int main(int argc, char *argv[]) {
